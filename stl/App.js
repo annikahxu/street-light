@@ -62,6 +62,18 @@ export default function App() {
     Alert.alert("Button Pressed!", "You clicked the button.");
   };
 
+  const customMapStyle = [
+    {
+      elementType: "geometry",
+      stylers: [{ color: "#ebe3cd" }],
+    },
+    {
+      elementType: "labels.text.fill",
+      stylers: [{ color: "#523735" }],
+    },
+    // Add more style elements here...
+  ];
+
   // vars for grabbing data
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,6 +115,7 @@ export default function App() {
             style={styles.map}
             initialRegion={INITIAL_REGION}
             showsUserLocation={true}
+            customMapStyle={customMapStyle}
             region={location || INITIAL_REGION}
             onPress={handleMapPress} // Add onPress handler to MapView
           >
@@ -111,9 +124,11 @@ export default function App() {
             {/* Render the markers that the user adds */}
             {markers.map((marker, index) => (
               <Marker
+                style={styles.marker}
                 key={index}
                 coordinate={marker.coordinate}
                 title={marker.title}
+                image={require("./assets/cat.jpg")}
               />
             ))}
           </MapView>
@@ -125,34 +140,6 @@ export default function App() {
       </TouchableWithoutFeedback>
     );
   }
-
-  // useEffect(() => {
-  //   const loadData = async () => {
-  //     const result = await fetchData(); // Call fetchData when the component mounts
-  //     setData(result); // Set the fetched data to state
-  //     console.log("data", result);
-  //     setLoading(false);
-  //   };
-
-  //   loadData();
-  // }, []);
-
-  // if (loading) {
-  //   return (
-  //     <View style={styles.container}>
-  //       <ActivityIndicator size="large" color="#0000000" />
-  //       <Text>Loading...</Text>
-  //     </View>
-  //   );
-  // } else {
-  //   return (
-  //     <View style={styles.container}>
-  //       <Text>Data: {data[0].rating}</Text>
-  //       <Form />
-  //       <StatusBar style="auto" />
-  //     </View>
-  //   );
-  // }
 }
 
 const styles = StyleSheet.create({
@@ -170,4 +157,36 @@ const styles = StyleSheet.create({
     marginTop: 10,
     alignItems: "center",
   },
+  marker: {
+    width: "5%",
+  },
 });
+
+// scrap
+// useEffect(() => {
+//   const loadData = async () => {
+//     const result = await fetchData(); // Call fetchData when the component mounts
+//     setData(result); // Set the fetched data to state
+//     console.log("data", result);
+//     setLoading(false);
+//   };
+
+//   loadData();
+// }, []);
+
+// if (loading) {
+//   return (
+//     <View style={styles.container}>
+//       <ActivityIndicator size="large" color="#0000000" />
+//       <Text>Loading...</Text>
+//     </View>
+//   );
+// } else {
+//   return (
+//     <View style={styles.container}>
+//       <Text>Data: {data[0].rating}</Text>
+//       <Form />
+//       <StatusBar style="auto" />
+//     </View>
+//   );
+// }
