@@ -3,13 +3,13 @@ import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 // import { ref, set } from "firebase/database";
 
 // api keys
-const app = initializeApp({
-  apiKey: "AIzaSyB7LRwvWgcV5qUTgAGErBLVIG2xhJb_CME",
-  authDomain: "streetlight-9901d.firebaseapp.com",
-  projectId: "streetlight-9901d",
-  storageBucket: "streetlight-9901d.appspot.com",
-  messagingSenderId: "956208399158",
-  appId: "1:956208399158:web:ed6f33ee7f9142ed5ca997",
+const app1 = initializeApp({
+  // apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  // authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  // projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  // storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  // messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  // appId: process.env.REACT_APP_FIREBASE_APP_ID,
 });
 
 // init
@@ -17,21 +17,21 @@ console.log("reloaded");
 
 export const db = getFirestore();
 // get collection
-export const colRef = collection(db, "test");
+export const colRef = collection(db, "pins");
 
 // fetch data from database
 export const fetchData = async () => {
-  test = [];
+  pins = [];
   try {
     const snapshot = await getDocs(colRef);
     snapshot.docs.forEach((doc) => {
-      test.push({ ...doc.data(), id: doc.id });
+      pins.push({ ...doc.data(), id: doc.id });
     });
-    console.log("test", test);
-    return test;
+    console.log("test", pins);
+    return pins;
   } catch (error) {
     console.error("Error fetching documents:", error);
-    return [{ rating: 2 }];
+    return [];
   }
 };
 
@@ -42,4 +42,4 @@ export const postData = (number) => {
   });
 };
 
-export default app;
+export default app1;
