@@ -9,12 +9,17 @@ import {
   SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
+  TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { fetchData } from "./server/firebase";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import Slider from '@react-native-community/slider'; // Import the Slider component
+import Slider from '@react-native-community/slider';
+import { Ionicons } from '@expo/vector-icons';
+
+// import { database } from './firebaseConfig';
+// import { ref, push } from 'firebase/database';
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -30,6 +35,8 @@ export default function App() {
   const [addMode, setAddMode] = useState(false);
   const [sliderValue, setSliderValue] = useState(1);
   const [currentMarkerIndex, setCurrentMarkerIndex] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -49,16 +56,26 @@ export default function App() {
     })();
   }, []);
 
+  useEffect(() => {
+    const loadData = async () => {
+      const result = await fetchData();
+      setData(result);
+      console.log("data", result);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
   const handleMapPress = (event) => {
     if (addMode) {
       const newMarker = {
         coordinate: event.nativeEvent.coordinate,
         title: `Marker at (${event.nativeEvent.coordinate.latitude.toFixed(2)}, ${event.nativeEvent.coordinate.longitude.toFixed(2)})`,
-        sliderValue: 1, // Default value for the slider
+        sliderValue: 1,
       };
       setMarkers([...markers, newMarker]);
-      setCurrentMarkerIndex(markers.length); // Set index for the current marker
-      //Alert.alert("Pin Added", "Now use the slider to set a value for this pin.");
+      setCurrentMarkerIndex(markers.length);
     }
   };
 
@@ -75,48 +92,30 @@ export default function App() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmitPin = () => {
     if (currentMarkerIndex !== null) {
       const marker = markers[currentMarkerIndex];
       console.log(
         `Pin Location: Latitude: ${marker.coordinate.latitude}, Longitude: ${marker.coordinate.longitude}, Slider Value: ${marker.sliderValue}`
       );
-      // Reset slider value to 1
       setSliderValue(1);
+      setAddMode(false);
+      Alert.alert("Pin Submitted");
     } else {
       Alert.alert("No pin selected", "Please add a pin before submitting.");
     }
   };
 
-  const handleDoneAddingPress = () => {
-    setAddMode(false);
-    Alert.alert("Add Mode Deactivated", "You can no longer add pins.");
-  };
-
   const customMapStyle = [
     {
       elementType: "geometry",
-      stylers: [{ color: "#ebe3cd" }],
+      stylers: [{ color: "black" }],
     },
     {
       elementType: "labels.text.fill",
-      stylers: [{ color: "#523735" }],
+      stylers: [{ color: "grey" }],
     },
   ];
-
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadData = async () => {
-      const result = await fetchData();
-      setData(result);
-      console.log("data", result);
-      setLoading(false);
-    };
-
-    loadData();
-  }, []);
 
   if (loading) {
     return (
@@ -127,13 +126,8 @@ export default function App() {
     );
   } else {
     return (
-      <TouchableWithoutFeedback
-        onPress={() => {
-          Keyboard.dismiss();
-        }}
-      >
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <SafeAreaView style={styles.container}>
-          {/* Slider Container at the Top */}
           {addMode && currentMarkerIndex !== null && (
             <View style={styles.sliderContainer}>
               <Text style={styles.sliderLabel}>Set Value for Pin: {sliderValue}</Text>
@@ -147,7 +141,6 @@ export default function App() {
                 minimumTrackTintColor="red"
                 maximumTrackTintColor="darkred"
               />
-              <Button title="Submit Pin" onPress={handleSubmit} />
             </View>
           )}
 
@@ -172,7 +165,12 @@ export default function App() {
           </MapView>
           <View style={styles.buttonContainer}>
             {addMode ? (
-              <Button title="Done Adding Pins" onPress={handleDoneAddingPress} />
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmitPin}
+              >
+                <Ionicons name="checkmark" size={24} color="white" />
+              </TouchableOpacity>
             ) : (
               <Button title="Add Pin" onPress={() => setAddMode(true)} />
             )}
@@ -185,7 +183,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 20,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
@@ -194,10 +192,10 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  buttonContainer: {
-    marginTop: 10,
-    alignItems: "center",
-  },
+  // buttonContainer: {
+  //   marginTop: 10,
+  //   alignItems: "center",
+  // },
   marker: {
     width: "5%",
   },
@@ -224,4 +222,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 50,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    backgroundColor: 'black',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 120,
+    height: 50,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
+
+
 });
+
