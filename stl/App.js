@@ -52,111 +52,6 @@ export default function App() {
   const [sos, setsos] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false); // check if font loaded
 
-  useEffect(() => {
-    console.log("Registering notification");
-    registerForPushNotificationsAsync()
-      .then((token) => {
-        console.log("token: ", token);
-        setExpoPushToken(token);
-      })
-      .catch((error) => console.log("error: ", error));
-      return () => {
-        if (flashingMarkerRef.current) {
-          clearInterval(flashingMarkerRef.current);
-        }
-      };
-  }, []);
-
-  async function registerForPushNotificationsAsync() {
-    let token;
-    setsos(true);
-
-    if (Device.isDevice) {
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      if (finalStatus !== "granted") {
-        alert("Failed to get push token for push notification");
-        return;
-      }
-
-      token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId: "43003c01-1e10-40a6-a7ef-dfeb151ec979",
-        })
-      ).data;
-      console.log(token);
-    } else {
-      alert("Must use physical device for Push Notifications");
-    }
-
-    return token;
-  }
-
-  // const startFlashingMarker = (sosMarkerId) => {
-  //   let flashing = true;
-  //   flashingMarkerRef.current = setInterval(() => {
-  //     setMarkers((prevMarkers) =>
-  //       prevMarkers.map((marker) =>
-  //         marker.id === sosMarkerId
-  //           ? { ...marker, opacity: flashing ? 1 : 0.3 }
-  //           : marker
-  //       )
-  //     );
-  //     flashing = !flashing;
-  //   }, 500);
-  
-  //   setTimeout(() => {
-  //     if (flashingMarkerRef.current) {
-  //       clearInterval(flashingMarkerRef.current);
-  //       flashingMarkerRef.current = null;
-  //     }
-  //   }, 10000);
-  // };
-  
-
-  const sendPushNotification = async () => {
-    console.log("sending notification");
-    const message = {
-      to: expoPushToken,
-      sound: "default",
-      title: "SOS Alert!",
-      body: "Someone nearby has sent an SOS alert",
-    };
-    
-    try {
-      await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Accept-encoding": "gzip, deflate",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      });
-      console.log(message.title);
-
-      // if (location) {
-      //   const sosMarkerId = Date.now().toString(); // Generate a unique ID
-      //   const sosMarker = {
-      //     id: sosMarkerId,
-      //     coordinate: location,
-      //     title: "SOS Location",
-      //     opacity: 1,
-      //   };
-      //   setMarkers((prevMarkers) => [...prevMarkers, sosMarker]);
-      //   startFlashingMarker(sosMarkerId);
-      // }
-    } catch (error) {
-      console.error("Error sending push notification:", error);
-    }
-  };
-
-
   // get user location
   useEffect(() => {
     (async () => {
@@ -239,6 +134,59 @@ export default function App() {
       setMarkers(updatedMarkers);
     }
   };
+  useEffect(() => {
+    console.log("Registering notification");
+    registerForPushNotificationsAsync().then(token => {
+      console.log("token: ", token)
+      setExpoPushToken(token)
+    }).catch(error => console.log("error: ", error))
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== 'granted') {
+        alert('Failed to get push token for push notification');
+        return;
+      }
+
+      token = (await Notifications.getExpoPushTokenAsync({ projectId: "43003c01-1e10-40a6-a7ef-dfeb151ec979"})).data;
+      console.log(token);
+    } else {
+      alert('Must use physical device for Push Notifications');
+    }
+
+    return token;
+  }
+
+  //send notification
+  const sendPushNotification = async () => {
+    console.log("sending notification");
+    const message = {
+      to: expoPushToken,
+      sound: "default",
+      title: "SOS Notification!",
+      body: "Someone send a SOS notification",
+  
+    }
+    await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+    console.log(message.title);
+  };
 
   //handle cancel pin creation
   const handleCancelPin = async () => {
@@ -298,7 +246,7 @@ export default function App() {
     // all is good
     return (
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           {addMode && (
             <View style={styles.pinAddMode}>
               <Text
@@ -336,6 +284,7 @@ export default function App() {
               </Text>
             </View>
           )}
+
           {/* map view */}
           <MapView
             style={styles.map}
@@ -344,18 +293,6 @@ export default function App() {
             region={location || INITIAL_REGION}
             onPress={handleMapPress}
           >
-            {/* <Blink duration={300}>
-              <Marker
-                coordinate={location}
-              >
-                <Image
-                    source={require("./assets/newpin.png")}
-                    style={{ width: 80, height: 80 }}
-                    resizeMode="contain"
-                  />
-              </Marker>
-            </Blink> */}
-
             {markers.map((marker, index) => (
               <Marker
                 key={index}
@@ -431,7 +368,7 @@ export default function App() {
 )}
 
 
-        </SafeAreaView>
+        </View>
       </TouchableWithoutFeedback>
     );
   }
@@ -515,7 +452,7 @@ const styles = StyleSheet.create({
   }, 
   sosContainer: {
     position: "absolute",
-    bottom: 75,
+    bottom: 40,
     left: 30,
     alignItems: "center",
     backgroundColor: "#db162f",
@@ -551,5 +488,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 15,
     alignItems: "center",
+  },
+  helpButtonContainer: {
+    position: "absolute",
+    top: 80,
+    left: 80,
+    // alignItems: "center",
+    // borderRadius: 40,
+    justifyContent: "center",
+    // elevation: 5,
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
+    // width: 40,
+    // height: 40,
   },
 });
