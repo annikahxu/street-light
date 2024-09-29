@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import { fetchData, addPin } from "./server/firebase";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -19,6 +19,7 @@ import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
+import Blink from "./components/blink";
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -48,6 +49,8 @@ export default function App() {
   const [loading, setLoading] = useState(true); // loading data
   const [isOpening, setIsOpening] = useState(true);
   const [expoPushToken, setExpoPushToken] = useState("");
+  const flashingMarkerRef = useRef(null);
+  const [sos, setsos] = useState(false);
 
   useEffect(() => {
     console.log("Registering notification");
@@ -57,10 +60,16 @@ export default function App() {
         setExpoPushToken(token);
       })
       .catch((error) => console.log("error: ", error));
+      return () => {
+        if (flashingMarkerRef.current) {
+          clearInterval(flashingMarkerRef.current);
+        }
+      };
   }, []);
 
   async function registerForPushNotificationsAsync() {
     let token;
+    setsos(true);
 
     if (Device.isDevice) {
       const { status: existingStatus } =
@@ -88,24 +97,63 @@ export default function App() {
     return token;
   }
 
+  // const startFlashingMarker = (sosMarkerId) => {
+  //   let flashing = true;
+  //   flashingMarkerRef.current = setInterval(() => {
+  //     setMarkers((prevMarkers) =>
+  //       prevMarkers.map((marker) =>
+  //         marker.id === sosMarkerId
+  //           ? { ...marker, opacity: flashing ? 1 : 0.3 }
+  //           : marker
+  //       )
+  //     );
+  //     flashing = !flashing;
+  //   }, 500);
+  
+  //   setTimeout(() => {
+  //     if (flashingMarkerRef.current) {
+  //       clearInterval(flashingMarkerRef.current);
+  //       flashingMarkerRef.current = null;
+  //     }
+  //   }, 10000);
+  // };
+  
+
   const sendPushNotification = async () => {
     console.log("sending notification");
     const message = {
       to: expoPushToken,
       sound: "default",
-      title: "Push Notification!!!",
-      body: "OMG it's a push notif!!!",
+      title: "SOS Alert!",
+      body: "Someone nearby has sent an SOS alert",
     };
-    await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Accept-encoding": "gzip, deflate",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(message),
-    });
-    console.log(message.title);
+    
+    try {
+      await fetch("https://exp.host/--/api/v2/push/send", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Accept-encoding": "gzip, deflate",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(message),
+      });
+      console.log(message.title);
+
+      // if (location) {
+      //   const sosMarkerId = Date.now().toString(); // Generate a unique ID
+      //   const sosMarker = {
+      //     id: sosMarkerId,
+      //     coordinate: location,
+      //     title: "SOS Location",
+      //     opacity: 1,
+      //   };
+      //   setMarkers((prevMarkers) => [...prevMarkers, sosMarker]);
+      //   startFlashingMarker(sosMarkerId);
+      // }
+    } catch (error) {
+      console.error("Error sending push notification:", error);
+    }
   };
 
   useEffect(() => {
@@ -179,6 +227,7 @@ export default function App() {
   //handle cancel pin creation
   const handleCancelPin = async () => {
     // Reset all states related to pin addition
+    console.log("cancel pin was reached");
     setAddMode(false);
     setSliderValue(1);
     setCurrentMarkerIndex(null);
@@ -263,6 +312,18 @@ export default function App() {
             region={location || INITIAL_REGION}
             onPress={handleMapPress}
           >
+            {/* <Blink duration={300}>
+              <Marker
+                coordinate={location}
+              >
+                <Image
+                    source={require("./assets/newpin.png")}
+                    style={{ width: 80, height: 80 }}
+                    resizeMode="contain"
+                  />
+              </Marker>
+            </Blink> */}
+
             {markers.map((marker, index) => (
               <Marker
                 key={index}
@@ -300,8 +361,11 @@ export default function App() {
             {addMode ? (
               <View>
                 {/* style cancel button */}
-                <View style={styles.buttonContainerL} onPress={handleCancelPin}>
-                  <TouchableOpacity style={styles.submitButton}>
+                <View style={styles.buttonContainerL}>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleCancelPin}
+                  >
                     <Ionicons name="close" size={24} color="black" />
                   </TouchableOpacity>
                 </View>
@@ -326,9 +390,15 @@ export default function App() {
               </View>
             )}
           </View>
-          <View style={styles.buttonSOS}>
-            <Button title="SOS" onPress={() => sendPushNotification()} />
+          {!addMode && (
+            <View style={styles.sosContainer}>
+            <TouchableOpacity onPress={() => sendPushNotification()} style={styles.sosButton}>
+            <Text style={styles.sosText}>SOS</Text>
+            </TouchableOpacity>
           </View>
+)}
+
+
         </SafeAreaView>
       </TouchableWithoutFeedback>
     );
@@ -394,7 +464,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
   },
-  buttonContainerL: {
+ buttonContainerL: {
     position: "absolute",
     bottom: 40,
     left: 30,
@@ -409,7 +479,35 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     width: 80,
     height: 80,
+  }, 
+  sosContainer: {
+    position: "absolute",
+    bottom: 75,
+    left: 30,
+    alignItems: "center",
+    backgroundColor: "#db162f",
+    borderRadius: 40,
+    justifyContent: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 80,
+    height: 80,
   },
+  sosButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+  },
+  sosText: {
+    color: "white", // This sets the text color to white
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  
   pinAddMode: {
     position: "absolute",
     width: "50%",
