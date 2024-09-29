@@ -1,15 +1,25 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
-import { useEffect } from "react";
-import React from "react";
+import React, { useState, useEffect } from 'react';
+import Loading from './components/loading';
+import Main from './components/main';
+import Animation from './components/animation';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app! test</Text>
-      <StatusBar style="auto" />
-    </View>
-  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate a loading process
+    const timer = setTimeout(() => {
+      setIsLoading(false); // Switch to main page after 3 seconds
+    }, 5000);
+
+    // Clean up the timer
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Conditionally render the Loading or Main page based on the loading state
+  return isLoading ? <Loading /> : <Main />;
 }
 
 const styles = StyleSheet.create({
