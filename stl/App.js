@@ -9,6 +9,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { fetchData, addPin } from "./server/firebase";
@@ -164,11 +165,15 @@ export default function App() {
     return (
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <SafeAreaView style={styles.container}>
+          {addMode && (
+            <View style={styles.pinAddMode}>
+              <Text style={styles.pinAddModeText}>ADD RED ZONE</Text>
+            </View>
+          )}
           {addMode && currentMarkerIndex !== null && (
+            // show slider
             <View style={styles.sliderContainer}>
-              <Text style={styles.sliderLabel}>
-                Set Value for Pin: {sliderValue}
-              </Text>
+              <Text style={styles.sliderLabel}>RATE SAFETY: {sliderValue}</Text>
               <Slider
                 style={styles.slider}
                 minimumValue={1}
@@ -181,7 +186,7 @@ export default function App() {
               />
             </View>
           )}
-
+          {/* map view */}
           <MapView
             style={styles.map}
             initialRegion={INITIAL_REGION}
@@ -191,12 +196,17 @@ export default function App() {
           >
             {markers.map((marker, index) => (
               <Marker
-                style={styles.marker}
                 key={index}
+                opacity="0.5"
                 coordinate={marker.coordinate}
                 title={marker.title}
-                image={require("./assets/cat.jpg")}
-              />
+              >
+                <Image
+                  source={require("./assets/newpin.png")}
+                  style={{ width: 40, height: 40 }}
+                  resizeMode="contain"
+                />
+              </Marker>
             ))}
             {data.map((item) => {
               return (
@@ -206,21 +216,45 @@ export default function App() {
                     latitude: item.latitude,
                     longitude: item.longitude,
                   }}
-                  image={require("./assets/Red-Circle-Transparent.png")}
-                />
+                  opacity={0.2 * item.rating}
+                >
+                  <Image
+                    source={require("./assets/pin.png")}
+                    style={{ width: 40, height: 40 }}
+                    resizeMode="contain"
+                  />
+                </Marker>
               );
             })}
           </MapView>
-          <View style={styles.buttonContainer}>
+          <View style={styles.bottomContainer}>
             {addMode ? (
-              <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmitPin}
-              >
-                <Ionicons name="checkmark" size={24} color="white" />
-              </TouchableOpacity>
+              <View>
+                {/* style cancel button */}
+                <View style={styles.buttonContainerL}>
+                  <TouchableOpacity style={styles.submitButton}>
+                    <Ionicons name="close" size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+                {/* style submit button */}
+                <View style={styles.buttonContainerR}>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleSubmitPin}
+                  >
+                    <Ionicons name="checkmark" size={24} color="white" />
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
-              <Button title="Add Pin" onPress={() => setAddMode(true)} />
+              <View style={styles.buttonContainerR}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={() => setAddMode(true)}
+                >
+                  <Ionicons name="add" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
             )}
           </View>
         </SafeAreaView>
@@ -240,17 +274,12 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  // buttonContainer: {
-  //   marginTop: 10,
-  //   alignItems: "center",
-  // },
-  marker: {
-    width: "5%",
-  },
+
   sliderContainer: {
     position: "absolute",
-    top: 40,
-    width: "90%",
+    top: 130,
+    width: "80%",
+    height: 150,
     padding: 15,
     backgroundColor: "#fff",
     borderRadius: 15,
@@ -260,7 +289,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5, // For Android shadow
     alignItems: "center",
-    zIndex: 10, // To make sure it's on top of the map
+    justifyContent: "center",
+    zIndex: 20, // To make sure it's on top of the map
   },
   slider: {
     width: "100%",
@@ -270,27 +300,57 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
-  buttonContainer: {
+  bottomContainer: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "flex-end",
+    width: "100%",
+  },
+  buttonContainerR: {
     position: "absolute",
-    bottom: 50,
-    left: 20,
-    right: 20,
+    bottom: 40,
+    right: 30,
     alignItems: "center",
     backgroundColor: "black",
-    borderRadius: 25,
+    borderRadius: 40,
     justifyContent: "center",
-    alignItems: "center",
     elevation: 5,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    width: 120,
-    height: 50,
+    width: 80,
+    height: 80,
   },
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+  buttonContainerL: {
+    position: "absolute",
+    bottom: 40,
+    left: 30,
+    alignItems: "center",
+    backgroundColor: "white",
+    borderRadius: 40,
+    justifyContent: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 80,
+    height: 80,
+  },
+  pinAddMode: {
+    position: "absolute",
+    width: "50%",
+    borderRadius: 20,
+    top: 70,
+    zIndex: 10,
+    backgroundColor: "#1F2039",
+    color: "#fff",
+    padding: 15,
+    alignItems: "center",
+  },
+  pinAddModeText: {
+    color: "#fff", // Set text color to white
+    fontSize: 14, // Adjust font size if needed
   },
 });

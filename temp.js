@@ -9,12 +9,18 @@ import {
   SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
+  TouchableOpacity,
+  Image,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { fetchData } from "./server/firebase";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import { Form } from "./components/Form";
+import Slider from "@react-native-community/slider";
+import { Ionicons } from "@expo/vector-icons";
+
+// import { database } from './firebaseConfig';
+// import { ref, push } from 'firebase/database';
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -27,8 +33,12 @@ export default function App() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [markers, setMarkers] = useState([]);
+  const [addMode, setAddMode] = useState(false);
+  const [sliderValue, setSliderValue] = useState(1);
+  const [currentMarkerIndex, setCurrentMarkerIndex] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch the user's current location
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -47,42 +57,10 @@ export default function App() {
     })();
   }, []);
 
-  // Handle map press to add marker
-  const handleMapPress = (event) => {
-    const newMarker = {
-      coordinate: event.nativeEvent.coordinate,
-      title: `Marker at (${event.nativeEvent.coordinate.latitude.toFixed(
-        2
-      )}, ${event.nativeEvent.coordinate.longitude.toFixed(2)})`,
-    };
-    setMarkers([...markers, newMarker]);
-  };
-
-  const handlePress = () => {
-    Alert.alert("Button Pressed!", "You clicked the button.");
-  };
-
-  const customMapStyle = [
-    {
-      elementType: "geometry",
-      stylers: [{ color: "#ebe3cd" }],
-    },
-    {
-      elementType: "labels.text.fill",
-      stylers: [{ color: "#523735" }],
-    },
-    // Add more style elements here...
-  ];
-
-  // vars for grabbing data
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // get rating data from database
   useEffect(() => {
     const loadData = async () => {
-      const result = await fetchData(); // Call fetchData when the component mounts
-      setData(result); // Set the fetched data to state
+      const result = await fetchData();
+      setData(result);
       console.log("data", result);
       setLoading(false);
     };
@@ -90,7 +68,58 @@ export default function App() {
     loadData();
   }, []);
 
-  // show loading screen if still fetching from database
+  const handleMapPress = (event) => {
+    if (addMode) {
+      const newMarker = {
+        coordinate: event.nativeEvent.coordinate,
+        title: `Marker at (${event.nativeEvent.coordinate.latitude.toFixed(
+          2
+        )}, ${event.nativeEvent.coordinate.longitude.toFixed(2)})`,
+        sliderValue: 1,
+      };
+      setMarkers([...markers, newMarker]);
+      setCurrentMarkerIndex(markers.length);
+    }
+  };
+
+  const handleSliderChange = (value) => {
+    setSliderValue(value);
+    if (currentMarkerIndex !== null) {
+      const updatedMarkers = markers.map((marker, index) => {
+        if (index === currentMarkerIndex) {
+          return { ...marker, sliderValue: value };
+        }
+        return marker;
+      });
+      setMarkers(updatedMarkers);
+    }
+  };
+
+  const handleSubmitPin = () => {
+    if (currentMarkerIndex !== null) {
+      const marker = markers[currentMarkerIndex];
+      console.log(
+        `Pin Location: Latitude: ${marker.coordinate.latitude}, Longitude: ${marker.coordinate.longitude}, Slider Value: ${marker.sliderValue}`
+      );
+      setSliderValue(1);
+      setAddMode(false);
+      Alert.alert("Pin Submitted");
+    } else {
+      Alert.alert("No pin selected", "Please add a pin before submitting.");
+    }
+  };
+
+  const customMapStyle = [
+    {
+      elementType: "geometry",
+      stylers: [{ color: "black" }],
+    },
+    {
+      elementType: "labels.text.fill",
+      stylers: [{ color: "grey" }],
+    },
+  ];
+
   if (loading) {
     return (
       <View style={styles.container}>
@@ -100,48 +129,85 @@ export default function App() {
     );
   } else {
     return (
-      <TouchableWithoutFeedback
-        onPress={() => {
-          Keyboard.dismiss(); // so you can dismiss keyboard without submitting form
-        }}
-      >
+      <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <SafeAreaView style={styles.container}>
-          <View style={styles.container}>
-            <Text>Data: {data[0].rating}</Text>
-            <Form />
-            <StatusBar style="auto" />
-          </View>
+          {addMode && currentMarkerIndex !== null && (
+            <View style={styles.sliderContainer}>
+              <Text style={styles.sliderLabel}>
+                Set Value for Pin: {sliderValue}
+              </Text>
+              <Slider
+                style={styles.slider}
+                minimumValue={1}
+                maximumValue={5}
+                step={1}
+                value={sliderValue}
+                onValueChange={handleSliderChange}
+                minimumTrackTintColor="red"
+                maximumTrackTintColor="darkred"
+              />
+            </View>
+          )}
+
           <MapView
             style={styles.map}
             initialRegion={INITIAL_REGION}
             showsUserLocation={true}
             customMapStyle={customMapStyle}
             region={location || INITIAL_REGION}
-            onPress={handleMapPress} // Add onPress handler to MapView
+            onPress={handleMapPress}
           >
-            {/* Place a marker at the user's current location if available */}
-            {data.map((lat, index) => {
-                <Marker 
-                    key={lat}
-                    coordinate={{ latitude: 40 + lat.rating, longitude: -80}}
-                    image={require("./assets/Red-Circle-Transparent.png")}
-                />
-            })}
             {location && <Marker coordinate={location} title="You are here" />}
-            {/* Render the markers that the user adds */}
             {markers.map((marker, index) => (
+              // <Marker
+              //   // style={styles.marker}
+              //   key={index}
+              //   style={{ width: 26, height: 28 }}
+              //   resizeMode="contain"
+              //   opacity="0.5"
+              //   coordinate={marker.coordinate}
+              //   title={marker.title}
+              //   image={require("./assets/pin.png")}
+              // />
               <Marker
-                style={styles.marker}
                 key={index}
+                opacity="0.5"
                 coordinate={marker.coordinate}
                 title={marker.title}
-                image={require("./assets/cat.jpg")}
-              />
+              >
+                <Image
+                  source={require("./assets/pin.png")}
+                  style={{ width: 25, height: 25 }}
+                  resizeMode="contain"
+                />
+              </Marker>
             ))}
           </MapView>
-          {/* Add a button below the map */}
-          <View style={styles.buttonContainer}>
-            <Button title="Press me" onPress={handlePress} />
+          <View>
+            {addMode ? (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={handleSubmitPin}
+                >
+                  <Ionicons name="checkmark" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={styles.submitButton}
+                  onPress={() => setAddMode(true)}
+                >
+                  <Ionicons name="add" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+              // <Button
+              //   title="+"
+              //   style={{ fontSize: 24, color: "#ffffff" }}
+              //   onPress={() => setAddMode(true)}
+              // />
+            )}
           </View>
         </SafeAreaView>
       </TouchableWithoutFeedback>
@@ -151,49 +217,65 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 20,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   map: {
     width: "100%",
-    height: "75%", // Adjust height to make space for the button
+    height: "100%",
+  },
+  // buttonContainer: {
+  //   marginTop: 10,
+  //   alignItems: "center",
+  // },
+  marker: {
+    width: 500,
+    height: 500,
+  },
+  sliderContainer: {
+    position: "absolute",
+    top: 40,
+    width: "90%",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5, // For Android shadow
+    alignItems: "center",
+    zIndex: 10, // To make sure it's on top of the map
+  },
+  slider: {
+    width: "100%",
+    height: 40,
+  },
+  sliderLabel: {
+    fontSize: 16,
+    marginBottom: 10,
   },
   buttonContainer: {
-    marginTop: 10,
+    position: "absolute",
+    bottom: 50,
+    right: 10,
     alignItems: "center",
+    backgroundColor: "black",
+    borderRadius: 40,
+    justifyContent: "center",
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 80,
+    height: 80,
   },
-  marker: {
-    width: "5%",
+  buttonText: {
+    color: "white",
+    fontSize: 80,
+    fontWeight: "bold",
   },
 });
-
-// scrap
-// useEffect(() => {
-//   const loadData = async () => {
-//     const result = await fetchData(); // Call fetchData when the component mounts
-//     setData(result); // Set the fetched data to state
-//     console.log("data", result);
-//     setLoading(false);
-//   };
-
-//   loadData();
-// }, []);
-
-// if (loading) {
-//   return (
-//     <View style={styles.container}>
-//       <ActivityIndicator size="large" color="#0000000" />
-//       <Text>Loading...</Text>
-//     </View>
-//   );
-// } else {
-//   return (
-//     <View style={styles.container}>
-//       <Text>Data: {data[0].rating}</Text>
-//       <Form />
-//       <StatusBar style="auto" />
-//     </View>
-//   );
-// }
