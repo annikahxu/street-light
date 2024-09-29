@@ -20,6 +20,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import Blink from "./components/blink";
+import * as Font from "expo-font";
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -28,8 +29,6 @@ const INITIAL_REGION = {
   longitudeDelta: 5,
 };
 import Loading from "./components/loading";
-import Main from "./components/main";
-import Animation from "./components/animation";
 
 Notifications.setNotificationHandler({
   handleNotification: async (notification) => ({
@@ -51,6 +50,7 @@ export default function App() {
   const [expoPushToken, setExpoPushToken] = useState("");
   const flashingMarkerRef = useRef(null);
   const [sos, setsos] = useState(false);
+  const [fontLoaded, setFontLoaded] = useState(false); // check if font loaded
 
   useEffect(() => {
     console.log("Registering notification");
@@ -156,6 +156,8 @@ export default function App() {
     }
   };
 
+
+  // get user location
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -186,6 +188,20 @@ export default function App() {
     loadData();
   }, []);
 
+  // load fonts
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        "Karla-Regular": require("./assets/fonts/Karla-Regular.ttf"), // Adjust path as necessary
+        "Karla-Bold": require("./assets/fonts/Karla-Bold.ttf"), // Load other styles if needed
+      });
+      setFontLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
+
+  // opening screen
   useEffect(() => {
     // Simulate a loading process
     const timer = setTimeout(() => {
@@ -266,12 +282,12 @@ export default function App() {
       Alert.alert("No pin selected", "Please add a pin before submitting.");
     }
   };
-
+  
   if (isOpening) {
     // if app just opened
     return <Loading />;
-  } else if (loading) {
-    // if we are still retrieving items from the database
+  } else if (loading || !fontLoaded) {
+    // if we are still retrieving items from the database or loading font
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#0000000" />
@@ -285,13 +301,26 @@ export default function App() {
         <SafeAreaView style={styles.container}>
           {addMode && (
             <View style={styles.pinAddMode}>
-              <Text style={styles.pinAddModeText}>ADD RED ZONE</Text>
+              <Text
+                style={{
+                  fontFamily: "Karla-Bold",
+                  fontSize: 14,
+                  color: "white",
+                  textAlign: "center",
+                }}
+              >
+                PRESS ON MAP BELOW TO ADD RED ZONE
+              </Text>
             </View>
           )}
           {addMode && currentMarkerIndex !== null && (
             // show slider
             <View style={styles.sliderContainer}>
-              <Text style={styles.sliderLabel}>RATE SAFETY: {sliderValue}</Text>
+              <Text style={styles.sliderLabel}>HOW UNSAFE DID YOU FEEL?</Text>
+              <Text style={{ fontFamily: "Karla-Regular", fontSize: 14 }}>
+                {" "}
+                (1: Barely unsafe, 5: Very unsafe){" "}
+              </Text>
               <Slider
                 style={styles.slider}
                 minimumValue={1}
@@ -302,6 +331,9 @@ export default function App() {
                 minimumTrackTintColor="red"
                 maximumTrackTintColor="darkred"
               />
+              <Text style={{ fontFamily: "Karla-Bold", fontSize: 14 }}>
+                Current selection: {sliderValue}
+              </Text>
             </View>
           )}
           {/* map view */}
@@ -366,7 +398,7 @@ export default function App() {
                     style={styles.submitButton}
                     onPress={handleCancelPin}
                   >
-                    <Ionicons name="close" size={24} color="black" />
+                    <Ionicons name="close" size={24} color="#1F2039" />
                   </TouchableOpacity>
                 </View>
                 {/* style submit button */}
@@ -419,7 +451,7 @@ const styles = StyleSheet.create({
 
   sliderContainer: {
     position: "absolute",
-    top: 130,
+    top: 150,
     width: "80%",
     height: 150,
     padding: 15,
@@ -439,7 +471,8 @@ const styles = StyleSheet.create({
     height: 40,
   },
   sliderLabel: {
-    fontSize: 16,
+    fontFamily: "Karla-Bold",
+    fontSize: 18,
     marginBottom: 10,
   },
   bottomContainer: {
@@ -453,7 +486,7 @@ const styles = StyleSheet.create({
     bottom: 40,
     right: 30,
     alignItems: "center",
-    backgroundColor: "black",
+    backgroundColor: "#1F2039",
     borderRadius: 40,
     justifyContent: "center",
     elevation: 5,
@@ -473,7 +506,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: "center",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: "#1F2039",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -510,7 +543,7 @@ const styles = StyleSheet.create({
   
   pinAddMode: {
     position: "absolute",
-    width: "50%",
+    width: "60%",
     borderRadius: 20,
     top: 70,
     zIndex: 10,
@@ -518,9 +551,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 15,
     alignItems: "center",
-  },
-  pinAddModeText: {
-    color: "#fff", // Set text color to white
-    fontSize: 14, // Adjust font size if needed
   },
 });

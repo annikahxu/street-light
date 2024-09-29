@@ -30,6 +30,9 @@
         "projectId": "43003c01-1e10-40a6-a7ef-dfeb151ec979"
       }
     },
-    "owner": "allyguo223"
+    "owner": "allyguo223",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
