@@ -17,6 +17,7 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
+import * as Font from "expo-font";
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -25,8 +26,6 @@ const INITIAL_REGION = {
   longitudeDelta: 5,
 };
 import Loading from "./components/loading";
-import Main from "./components/main";
-import Animation from "./components/animation";
 
 export default function App() {
   const latitudes = [
@@ -50,8 +49,10 @@ export default function App() {
   const [currentMarkerIndex, setCurrentMarkerIndex] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true); // loading data
-  const [isOpening, setIsOpening] = useState(true);
+  const [isOpening, setIsOpening] = useState(true); // for opening screen
+  const [fontLoaded, setFontLoaded] = useState(false); // check if font loaded
 
+  // get user location
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -82,6 +83,20 @@ export default function App() {
     loadData();
   }, []);
 
+  // load fonts
+  useEffect(() => {
+    const loadFonts = async () => {
+      await Font.loadAsync({
+        "Karla-Regular": require("./assets/fonts/Karla-Regular.ttf"), // Adjust path as necessary
+        "Karla-Bold": require("./assets/fonts/Karla-Bold.ttf"), // Load other styles if needed
+      });
+      setFontLoaded(true);
+    };
+
+    loadFonts();
+  }, []);
+
+  // opening screen
   useEffect(() => {
     // Simulate a loading process
     const timer = setTimeout(() => {
@@ -149,11 +164,23 @@ export default function App() {
     }
   };
 
+  const handleCancelPin = async () => {
+    // Reset all states related to pin addition
+    setAddMode(false);
+    setSliderValue(1);
+    setCurrentMarkerIndex(null);
+
+    // Remove the last added marker (if any)
+    if (markers.length > 0) {
+      setMarkers(markers.slice(0, -1));
+    }
+  };
+
   if (isOpening) {
     // if app just opened
     return <Loading />;
-  } else if (loading) {
-    // if we are still retrieving items from the database
+  } else if (loading || !fontLoaded) {
+    // if we are still retrieving items from the database or loading font
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#0000000" />
@@ -167,13 +194,25 @@ export default function App() {
         <SafeAreaView style={styles.container}>
           {addMode && (
             <View style={styles.pinAddMode}>
-              <Text style={styles.pinAddModeText}>ADD RED ZONE</Text>
+              <Text
+                style={{
+                  fontFamily: "Karla-Bold",
+                  fontSize: 14,
+                  color: "white",
+                }}
+              >
+                ADD RED ZONE
+              </Text>
             </View>
           )}
           {addMode && currentMarkerIndex !== null && (
             // show slider
             <View style={styles.sliderContainer}>
-              <Text style={styles.sliderLabel}>RATE SAFETY: {sliderValue}</Text>
+              <Text style={styles.sliderLabel}>HOW UNSAFE DID YOU FEEL?</Text>
+              <Text style={{ fontFamily: "Karla-Regular", fontSize: 14 }}>
+                {" "}
+                (1: Barely unsafe, 5: Very unsafe){" "}
+              </Text>
               <Slider
                 style={styles.slider}
                 minimumValue={1}
@@ -184,6 +223,9 @@ export default function App() {
                 minimumTrackTintColor="red"
                 maximumTrackTintColor="darkred"
               />
+              <Text style={{ fontFamily: "Karla-Bold", fontSize: 14 }}>
+                Current selection: {sliderValue}
+              </Text>
             </View>
           )}
           {/* map view */}
@@ -232,7 +274,10 @@ export default function App() {
               <View>
                 {/* style cancel button */}
                 <View style={styles.buttonContainerL}>
-                  <TouchableOpacity style={styles.submitButton}>
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleCancelPin}
+                  >
                     <Ionicons name="close" size={24} color="black" />
                   </TouchableOpacity>
                 </View>
@@ -297,7 +342,8 @@ const styles = StyleSheet.create({
     height: 40,
   },
   sliderLabel: {
-    fontSize: 16,
+    fontFamily: "Karla-Bold",
+    fontSize: 18,
     marginBottom: 10,
   },
   bottomContainer: {
@@ -348,9 +394,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 15,
     alignItems: "center",
-  },
-  pinAddModeText: {
-    color: "#fff", // Set text color to white
-    fontSize: 14, // Adjust font size if needed
   },
 });
