@@ -51,7 +51,6 @@ export default function App() {
   const [loading, setLoading] = useState(true); // loading data
   const [isOpening, setIsOpening] = useState(true); // for opening screen
   const [fontLoaded, setFontLoaded] = useState(false); // check if font loaded
-  const [displayHelp, setdisplayHelp] = useState(false);
 
   // get user location
   useEffect(() => {
