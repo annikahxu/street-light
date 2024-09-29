@@ -188,11 +188,11 @@ export default function App() {
                 image={require("./assets/cat.jpg")}
               />
             ))}
-            {data.map((lat) => {
+            {data.map((item) => {
               return(
                 <Marker 
-                  key={lat}
-                  coordinate={{ latitude: lat.lat, longitude: -80.54}}
+                  key={item.id}
+                  coordinate={{ latitude: item.latitude, longitude: item.longitude}}
                   image={require("./assets/Red-Circle-Transparent.png")}
                 />
               )
@@ -202,7 +202,6 @@ export default function App() {
               coordinate={{ latitude: 43, longitude: -80}}
               image={require("./assets/Red-Circle-Transparent.png")}
             /> */}
-            {console.log(latitudes[0].latitude)}
           </MapView>
           <View style={styles.buttonContainer}>
             {addMode ? (
