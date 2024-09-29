@@ -51,6 +51,7 @@ export default function App() {
   const [loading, setLoading] = useState(true); // loading data
   const [isOpening, setIsOpening] = useState(true); // for opening screen
   const [fontLoaded, setFontLoaded] = useState(false); // check if font loaded
+  const [displayHelp, setdisplayHelp] = useState(false);
 
   // get user location
   useEffect(() => {
@@ -191,7 +192,7 @@ export default function App() {
     // all is good
     return (
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
           {addMode && (
             <View style={styles.pinAddMode}>
               <Text
@@ -229,6 +230,7 @@ export default function App() {
               </Text>
             </View>
           )}
+
           {/* map view */}
           <MapView
             style={styles.map}
@@ -237,6 +239,20 @@ export default function App() {
             region={location || INITIAL_REGION}
             onPress={handleMapPress}
           >
+            {/* help button */}
+            <View style={styles.helpButtonContainer}>
+              <Image
+                source={require("./assets/streetLight.png")}
+                style={{
+                  width: 60,
+                  height: 60,
+                  position: "absolute",
+                  top: 30,
+                  left: 10,
+                }}
+                resizeMode="contain"
+              ></Image>
+            </View>
             {markers.map((marker, index) => (
               <Marker
                 key={index}
@@ -303,7 +319,7 @@ export default function App() {
               </View>
             )}
           </View>
-        </SafeAreaView>
+        </View>
       </TouchableWithoutFeedback>
     );
   }
@@ -395,5 +411,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 15,
     alignItems: "center",
+  },
+  helpButtonContainer: {
+    position: "absolute",
+    top: 80,
+    left: 80,
+    // alignItems: "center",
+    // borderRadius: 40,
+    justifyContent: "center",
+    // elevation: 5,
+    // shadowOffset: { width: 0, height: 2 },
+    // shadowOpacity: 0.25,
+    // shadowRadius: 3.84,
+    // width: 40,
+    // height: 40,
   },
 });
