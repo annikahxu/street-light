@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import {
   StyleSheet,
   View,
@@ -15,11 +14,8 @@ import React, { useState, useEffect } from "react";
 import { fetchData, addPin } from "./server/firebase";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
-import Slider from '@react-native-community/slider';
-import { Ionicons } from '@expo/vector-icons';
-
-// import { database } from './firebaseConfig';
-// import { ref, push } from 'firebase/database';
+import Slider from "@react-native-community/slider";
+import { Ionicons } from "@expo/vector-icons";
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -27,9 +23,9 @@ const INITIAL_REGION = {
   latitudeDelta: 5,
   longitudeDelta: 5,
 };
-import Loading from './components/loading';
-import Main from './components/main';
-import Animation from './components/animation';
+import Loading from "./components/loading";
+import Main from "./components/main";
+import Animation from "./components/animation";
 
 export default function App() {
   const latitudes = [
@@ -45,14 +41,15 @@ export default function App() {
     { latitude: 49, longitude: -109 },
     { latitude: 50, longitude: -110 },
   ];
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null); // coordinate storage
   const [errorMsg, setErrorMsg] = useState(null);
-  const [markers, setMarkers] = useState([]);
-  const [addMode, setAddMode] = useState(false);
-  const [sliderValue, setSliderValue] = useState(1);
+  const [markers, setMarkers] = useState([]); // store markers
+  const [addMode, setAddMode] = useState(false); // for adding marker mode
+  const [sliderValue, setSliderValue] = useState(1); // rating value
   const [currentMarkerIndex, setCurrentMarkerIndex] = useState(null);
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // loading data
+  const [isOpening, setIsOpening] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -72,6 +69,7 @@ export default function App() {
     })();
   }, []);
 
+  // fetch data from database
   useEffect(() => {
     const loadData = async () => {
       const result = await fetchData();
@@ -83,11 +81,23 @@ export default function App() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    // Simulate a loading process
+    const timer = setTimeout(() => {
+      setIsOpening(false); // Switch to main page after 3 seconds
+    }, 5000);
+
+    // Clean up the timer
+    return () => clearTimeout(timer);
+  });
+  // to add marker
   const handleMapPress = (event) => {
     if (addMode) {
       const newMarker = {
         coordinate: event.nativeEvent.coordinate,
-        title: `Marker at (${event.nativeEvent.coordinate.latitude.toFixed(2)}, ${event.nativeEvent.coordinate.longitude.toFixed(2)})`,
+        title: `Marker at (${event.nativeEvent.coordinate.latitude.toFixed(
+          2
+        )}, ${event.nativeEvent.coordinate.longitude.toFixed(2)})`,
         sliderValue: 1,
       };
       setMarkers([...markers, newMarker]);
@@ -95,6 +105,7 @@ export default function App() {
     }
   };
 
+  // slider change
   const handleSliderChange = (value) => {
     setSliderValue(value);
     if (currentMarkerIndex !== null) {
@@ -108,6 +119,7 @@ export default function App() {
     }
   };
 
+  // confirm pin submission
   const handleSubmitPin = async () => {
     if (currentMarkerIndex !== null) {
       const marker = markers[currentMarkerIndex];
@@ -136,18 +148,11 @@ export default function App() {
     }
   };
 
-  const customMapStyle = [
-    {
-      elementType: "geometry",
-      stylers: [{ color: "black" }],
-    },
-    {
-      elementType: "labels.text.fill",
-      stylers: [{ color: "grey" }],
-    },
-  ];
-
-  if (loading) {
+  if (isOpening) {
+    // if app just opened
+    return <Loading />;
+  } else if (loading) {
+    // if we are still retrieving items from the database
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#0000000" />
@@ -155,12 +160,15 @@ export default function App() {
       </View>
     );
   } else {
+    // all is good
     return (
       <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
         <SafeAreaView style={styles.container}>
           {addMode && currentMarkerIndex !== null && (
             <View style={styles.sliderContainer}>
-              <Text style={styles.sliderLabel}>Set Value for Pin: {sliderValue}</Text>
+              <Text style={styles.sliderLabel}>
+                Set Value for Pin: {sliderValue}
+              </Text>
               <Slider
                 style={styles.slider}
                 minimumValue={1}
@@ -178,17 +186,9 @@ export default function App() {
             style={styles.map}
             initialRegion={INITIAL_REGION}
             showsUserLocation={true}
-            customMapStyle={customMapStyle}
             region={location || INITIAL_REGION}
             onPress={handleMapPress}
           >
-            {/* {data.map((lat, index) => {
-              <Marker 
-                key={index}
-                coordinate={{ latitude: 43, longitude: -80}}
-                image={require("./assets/Red-Circle-Transparent.png")}
-              />
-            })} */}
             {markers.map((marker, index) => (
               <Marker
                 style={styles.marker}
@@ -199,19 +199,17 @@ export default function App() {
               />
             ))}
             {data.map((item) => {
-              return(
-                <Marker 
+              return (
+                <Marker
                   key={item.id}
-                  coordinate={{ latitude: item.latitude, longitude: item.longitude}}
+                  coordinate={{
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                  }}
                   image={require("./assets/Red-Circle-Transparent.png")}
                 />
-              )
+              );
             })}
-            {/* <Marker 
-              key={1}
-              coordinate={{ latitude: 43, longitude: -80}}
-              image={require("./assets/Red-Circle-Transparent.png")}
-            /> */}
           </MapView>
           <View style={styles.buttonContainer}>
             {addMode ? (
@@ -229,20 +227,6 @@ export default function App() {
       </TouchableWithoutFeedback>
     );
   }
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate a loading process
-    const timer = setTimeout(() => {
-      setIsLoading(false); // Switch to main page after 3 seconds
-    }, 5000);
-
-    // Clean up the timer
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Conditionally render the Loading or Main page based on the loading state
-  return isLoading ? <Loading /> : <Main />;
 }
 
 const styles = StyleSheet.create({
@@ -264,22 +248,22 @@ const styles = StyleSheet.create({
     width: "5%",
   },
   sliderContainer: {
-    position: 'absolute',
+    position: "absolute",
     top: 40,
-    width: '90%',
+    width: "90%",
     padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5, // For Android shadow
-    alignItems: 'center',
+    alignItems: "center",
     zIndex: 10, // To make sure it's on top of the map
   },
   slider: {
-    width: '100%',
+    width: "100%",
     height: 40,
   },
   sliderLabel: {
@@ -287,17 +271,17 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonContainer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 50,
     left: 20,
     right: 20,
-    alignItems: 'center',
-    backgroundColor: 'black',
+    alignItems: "center",
+    backgroundColor: "black",
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 5,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -305,12 +289,8 @@ const styles = StyleSheet.create({
     height: 50,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-
-
-
 });
-

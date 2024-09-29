@@ -2,7 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 
 const app1 = initializeApp({
-  // API DETAILS
+  apiKey: "AIzaSyBQc5hQL37AK1Q94M9-a6nCgq5aBWRYvJo",
+  authDomain: "street-light-99395.firebaseapp.com",
+  projectId: "street-light-99395",
+  storageBucket: "street-light-99395.appspot.com",
+  messagingSenderId: "44781099306",
+  appId: "1:44781099306:web:a50e18da3cca6f47422653",
 });
 
 console.log("Firebase config reloaded");

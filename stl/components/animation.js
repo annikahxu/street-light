@@ -1,72 +1,68 @@
-import React from 'react';
-import { Button, View, Image, StyleSheet, ImageBackground } from 'react-native';
+import React from "react";
+import { Button, View, Image, StyleSheet, ImageBackground } from "react-native";
 import Animated, {
-    useSharedValue,
-    useAnimatedStyle,
-    useAnimatedProps,
-    withTiming,
-    withRepeat
-} from 'react-native-reanimated';
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedProps,
+  withTiming,
+  withRepeat,
+} from "react-native-reanimated";
 // import { opacity } from 'react-native-reanimated/lib/typescript/reanimated2/Colors';
-import { Svg, Circle } from 'react-native-svg';
+import { Svg, Circle } from "react-native-svg";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
-export default function App() {
+export default function Animation() {
+  const r = useSharedValue(0);
 
-    const r = useSharedValue(0);
+  React.useEffect(() => {
+    r.value = withRepeat(withTiming(2000), -1, true);
+  }, []);
 
-    React.useEffect(() => {
-        r.value = withRepeat(withTiming(2000), -1, true);
-    }, []);
+  const animatedProps = useAnimatedProps(() => ({
+    r: withTiming(r.value),
+  }));
 
-
-    const animatedProps = useAnimatedProps(() => ({
-        r: withTiming(r.value)
-    }));
-
-    return (
-        <View style={styles.container}>
-            {/* <ImageBackground source={require("../assets/streetLight.png")} style={styles.background}>
+  return (
+    <View style={styles.container}>
+      {/* <ImageBackground source={require("../assets/streetLight.png")} style={styles.background}>
             </ImageBackground> */}
-            <Svg style={styles.svg}>
-                <AnimatedCircle
-                    cx="50%"
-                    cy="50%"
-                    fill="#fffb9e"
-                    animatedProps={animatedProps}
-                />
-            </Svg>
-
-        </View>
-    );
+      <Svg style={styles.svg}>
+        <AnimatedCircle
+          cx="50%"
+          cy="50%"
+          fill="#fffb9e"
+          animatedProps={animatedProps}
+        />
+      </Svg>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#1d1e39',
-    },
-    background: {
-        width: 250,
-        height: 250,
-    },
-    svg: {
-        // position: 'absolute',
-        // flex: 1,
-        // alignItems: 'center,',
-        // justifyContent: 'center',
-        height: 2000,
-        width: 2000,
-    },
-    // image: {
-    //     width: 250,
-    //     height: 250,
-    // }
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#1d1e39",
+  },
+  background: {
+    width: 250,
+    height: 250,
+  },
+  svg: {
+    // position: 'absolute',
+    // flex: 1,
+    // alignItems: 'center,',
+    // justifyContent: 'center',
+    height: 2000,
+    width: 2000,
+  },
+  // image: {
+  //     width: 250,
+  //     height: 250,
+  // }
 });
-
 
 // import React from 'react';
 // import { StyleSheet, View, Text } from 'react-native';
