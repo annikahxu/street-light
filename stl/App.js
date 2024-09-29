@@ -17,6 +17,8 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import Slider from "@react-native-community/slider";
 import { Ionicons } from "@expo/vector-icons";
+import * as Device from "expo-device";
+import * as Notifications from "expo-notifications";
 
 const INITIAL_REGION = {
   latitude: 43,
@@ -28,20 +30,14 @@ import Loading from "./components/loading";
 import Main from "./components/main";
 import Animation from "./components/animation";
 
+Notifications.setNotificationHandler({
+  handleNotification: async (notification) => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 export default function App() {
-  const latitudes = [
-    { latitude: 40, longitude: -100 },
-    { latitude: 41, longitude: -101 },
-    { latitude: 42, longitude: -102 },
-    { latitude: 43, longitude: -103 },
-    { latitude: 44, longitude: -104 },
-    { latitude: 45, longitude: -105 },
-    { latitude: 46, longitude: -106 },
-    { latitude: 47, longitude: -107 },
-    { latitude: 48, longitude: -108 },
-    { latitude: 49, longitude: -109 },
-    { latitude: 50, longitude: -110 },
-  ];
   const [location, setLocation] = useState(null); // coordinate storage
   const [errorMsg, setErrorMsg] = useState(null);
   const [markers, setMarkers] = useState([]); // store markers
@@ -51,6 +47,66 @@ export default function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true); // loading data
   const [isOpening, setIsOpening] = useState(true);
+  const [expoPushToken, setExpoPushToken] = useState("");
+
+  useEffect(() => {
+    console.log("Registering notification");
+    registerForPushNotificationsAsync()
+      .then((token) => {
+        console.log("token: ", token);
+        setExpoPushToken(token);
+      })
+      .catch((error) => console.log("error: ", error));
+  }, []);
+
+  async function registerForPushNotificationsAsync() {
+    let token;
+
+    if (Device.isDevice) {
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      if (finalStatus !== "granted") {
+        alert("Failed to get push token for push notification");
+        return;
+      }
+
+      token = (
+        await Notifications.getExpoPushTokenAsync({
+          projectId: "43003c01-1e10-40a6-a7ef-dfeb151ec979",
+        })
+      ).data;
+      console.log(token);
+    } else {
+      alert("Must use physical device for Push Notifications");
+    }
+
+    return token;
+  }
+
+  const sendPushNotification = async () => {
+    console.log("sending notification");
+    const message = {
+      to: expoPushToken,
+      sound: "default",
+      title: "Push Notification!!!",
+      body: "OMG it's a push notif!!!",
+    };
+    await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-encoding": "gzip, deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message),
+    });
+    console.log(message.title);
+  };
 
   useEffect(() => {
     (async () => {
@@ -117,6 +173,19 @@ export default function App() {
         return marker;
       });
       setMarkers(updatedMarkers);
+    }
+  };
+
+  //handle cancel pin creation
+  const handleCancelPin = async () => {
+    // Reset all states related to pin addition
+    setAddMode(false);
+    setSliderValue(1);
+    setCurrentMarkerIndex(null);
+
+    // Remove the last added marker (if any)
+    if (markers.length > 0) {
+      setMarkers(markers.slice(0, -1));
     }
   };
 
@@ -231,7 +300,7 @@ export default function App() {
             {addMode ? (
               <View>
                 {/* style cancel button */}
-                <View style={styles.buttonContainerL}>
+                <View style={styles.buttonContainerL} onPress={handleCancelPin}>
                   <TouchableOpacity style={styles.submitButton}>
                     <Ionicons name="close" size={24} color="black" />
                   </TouchableOpacity>
@@ -256,6 +325,9 @@ export default function App() {
                 </TouchableOpacity>
               </View>
             )}
+          </View>
+          <View style={styles.buttonSOS}>
+            <Button title="SOS" onPress={() => sendPushNotification()} />
           </View>
         </SafeAreaView>
       </TouchableWithoutFeedback>

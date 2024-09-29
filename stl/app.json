@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "stl",
-    "slug": "stl",
+    "slug": "streetlight",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,6 +24,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "43003c01-1e10-40a6-a7ef-dfeb151ec979"
+      }
+    },
+    "owner": "allyguo223"
   }
 }
