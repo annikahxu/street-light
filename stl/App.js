@@ -19,11 +19,24 @@ import Slider from '@react-native-community/slider'; // Import the Slider compon
 const INITIAL_REGION = {
   latitude: 43,
   longitude: -80,
-  latitudeDelta: 2,
-  longitudeDelta: 2,
+  latitudeDelta: 5,
+  longitudeDelta: 5,
 };
 
 export default function App() {
+  const latitudes = [
+    { latitude: 40, longitude: -100 },
+    { latitude: 41, longitude: -101 },
+    { latitude: 42, longitude: -102 },
+    { latitude: 43, longitude: -103 },
+    { latitude: 44, longitude: -104 },
+    { latitude: 45, longitude: -105 },
+    { latitude: 46, longitude: -106 },
+    { latitude: 47, longitude: -107 },
+    { latitude: 48, longitude: -108 },
+    { latitude: 49, longitude: -109 },
+    { latitude: 50, longitude: -110 },
+  ];
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [markers, setMarkers] = useState([]);
@@ -159,7 +172,13 @@ export default function App() {
             region={location || INITIAL_REGION}
             onPress={handleMapPress}
           >
-            {location && <Marker coordinate={location} title="You are here" />}
+            {/* {data.map((lat, index) => {
+              <Marker 
+                key={index}
+                coordinate={{ latitude: 43, longitude: -80}}
+                image={require("./assets/Red-Circle-Transparent.png")}
+              />
+            })} */}
             {markers.map((marker, index) => (
               <Marker
                 style={styles.marker}
@@ -169,6 +188,21 @@ export default function App() {
                 image={require("./assets/cat.jpg")}
               />
             ))}
+            {data.map((lat) => {
+              return(
+                <Marker 
+                  key={lat}
+                  coordinate={{ latitude: lat.lat, longitude: -80.54}}
+                  image={require("./assets/Red-Circle-Transparent.png")}
+                />
+              )
+            })}
+            {/* <Marker 
+              key={1}
+              coordinate={{ latitude: 43, longitude: -80}}
+              image={require("./assets/Red-Circle-Transparent.png")}
+            /> */}
+            {console.log(latitudes[0].latitude)}
           </MapView>
           <View style={styles.buttonContainer}>
             {addMode ? (

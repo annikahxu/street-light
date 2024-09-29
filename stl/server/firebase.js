@@ -4,12 +4,12 @@ import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 
 // api keys
 const app1 = initializeApp({
-  // apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  // authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  // projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  // storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  // messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  // appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBQc5hQL37AK1Q94M9-a6nCgq5aBWRYvJo",
+  authDomain: "street-light-99395.firebaseapp.com",
+  projectId: "street-light-99395",
+  storageBucket: "street-light-99395.appspot.com",
+  messagingSenderId: "44781099306",
+  appId: "1:44781099306:web:a50e18da3cca6f47422653"
 });
 
 // init
