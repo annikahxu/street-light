@@ -1,33 +1,28 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
-// import { ref, set } from "firebase/database";
 
-// api keys
 const app1 = initializeApp({
-  // apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  // authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  // projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  // storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  // messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  // appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBQc5hQL37AK1Q94M9-a6nCgq5aBWRYvJo",
+  authDomain: "street-light-99395.firebaseapp.com",
+  projectId: "street-light-99395",
+  storageBucket: "street-light-99395.appspot.com",
+  messagingSenderId: "44781099306",
+  appId: "1:44781099306:web:a50e18da3cca6f47422653",
 });
 
-// init
-console.log("reloaded");
+console.log("Firebase config reloaded");
 
 export const db = getFirestore();
-// get collection
 export const colRef = collection(db, "pins");
 
-// fetch data from database
 export const fetchData = async () => {
-  pins = [];
+  let pins = [];
   try {
     const snapshot = await getDocs(colRef);
     snapshot.docs.forEach((doc) => {
       pins.push({ ...doc.data(), id: doc.id });
     });
-    console.log("test", pins);
+    console.log("Fetched pins:", pins);
     return pins;
   } catch (error) {
     console.error("Error fetching documents:", error);
@@ -35,11 +30,19 @@ export const fetchData = async () => {
   }
 };
 
-// post rating data from frontend
-export const postData = (number) => {
-  addDoc(colRef, {
-    rating: number,
-  });
+export const addPin = async (latitude, longitude, rating) => {
+  try {
+    const docRef = await addDoc(colRef, {
+      latitude,
+      longitude,
+      rating,
+    });
+    console.log("Document written with ID: ", docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    throw error;
+  }
 };
 
 export default app1;

@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import { fetchData } from "./server/firebase";
+import { fetchData, addPin } from "./server/firebase";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import Slider from '@react-native-community/slider';
@@ -92,15 +92,29 @@ export default function App() {
     }
   };
 
-  const handleSubmitPin = () => {
+  const handleSubmitPin = async () => {
     if (currentMarkerIndex !== null) {
       const marker = markers[currentMarkerIndex];
-      console.log(
-        `Pin Location: Latitude: ${marker.coordinate.latitude}, Longitude: ${marker.coordinate.longitude}, Slider Value: ${marker.sliderValue}`
-      );
-      setSliderValue(1);
-      setAddMode(false);
-      Alert.alert("Pin Submitted");
+      try {
+        await addPin(
+          marker.coordinate.latitude,
+          marker.coordinate.longitude,
+          marker.sliderValue
+        );
+        console.log(
+          `Pin submitted: Latitude: ${marker.coordinate.latitude}, Longitude: ${marker.coordinate.longitude}, Rating: ${marker.sliderValue}`
+        );
+        setSliderValue(1);
+        setAddMode(false);
+        Alert.alert("Success", "Pin submitted successfully!");
+        
+        // Optionally, refresh the data after submitting
+        const updatedData = await fetchData();
+        setData(updatedData);
+      } catch (error) {
+        console.error("Error submitting pin:", error);
+        Alert.alert("Error", "Failed to submit pin. Please try again.");
+      }
     } else {
       Alert.alert("No pin selected", "Please add a pin before submitting.");
     }
