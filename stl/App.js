@@ -27,8 +27,6 @@ const INITIAL_REGION = {
   latitudeDelta: 5,
   longitudeDelta: 5,
 };
-import { StyleSheet, Text, View } from "react-native";
-import React, { useState, useEffect } from 'react';
 import Loading from './components/loading';
 import Main from './components/main';
 import Animation from './components/animation';
