@@ -199,9 +199,10 @@ export default function App() {
                   fontFamily: "Karla-Bold",
                   fontSize: 14,
                   color: "white",
+                  textAlign: "center",
                 }}
               >
-                ADD RED ZONE
+                PRESS ON MAP BELOW TO ADD RED ZONE
               </Text>
             </View>
           )}
@@ -278,7 +279,7 @@ export default function App() {
                     style={styles.submitButton}
                     onPress={handleCancelPin}
                   >
-                    <Ionicons name="close" size={24} color="black" />
+                    <Ionicons name="close" size={24} color="#1F2039" />
                   </TouchableOpacity>
                 </View>
                 {/* style submit button */}
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
 
   sliderContainer: {
     position: "absolute",
-    top: 130,
+    top: 150,
     width: "80%",
     height: 150,
     padding: 15,
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
     bottom: 40,
     right: 30,
     alignItems: "center",
-    backgroundColor: "black",
+    backgroundColor: "#1F2039",
     borderRadius: 40,
     justifyContent: "center",
     elevation: 5,
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     justifyContent: "center",
     elevation: 5,
-    shadowColor: "#000",
+    shadowColor: "#1F2039",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -386,7 +387,7 @@ const styles = StyleSheet.create({
   },
   pinAddMode: {
     position: "absolute",
-    width: "50%",
+    width: "60%",
     borderRadius: 20,
     top: 70,
     zIndex: 10,
